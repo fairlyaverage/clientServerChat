@@ -1,4 +1,4 @@
-import socket, threading
+import socket, threading, ssl
 from shared_functions import *
 
 ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

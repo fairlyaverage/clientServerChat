@@ -1,16 +1,14 @@
-import socket, threading
+import socket, threading, ssl
 from shared_functions import *
 
 NUMBER_OF_CONNECTIONS = 25
 active_clients = dict()
 active_client_threads = dict()
-
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 host = socket.gethostname()
 port = 12342
 
-server_socket.bind((host, port))
-server_socket.listen(NUMBER_OF_CONNECTIONS)
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+context.load_cert_chain('/path/to/certchain.pem', '/path/to/private.key')
 
 def unique_client_id(client_id):
     if client_id in active_clients.keys():
@@ -90,8 +88,22 @@ def new_client_connection():
     # upon connection init, broadcast [updated] active_client_ids
     server_broadcast(active_clients_to_string(active_clients), "6")
 
-# debug only
-print("Listening for connections...")
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as u_server_socket:
+    u_server_socket.bind((host, port))
+    u_server_socket.listen(NUMBER_OF_CONNECTIONS)
+    with context.wrap_socket(u_server_socket, server_side=True) as server_socket:
 
-while True: # always listening for new clients
-    new_client_connection() # establish new connection; note that this is broken
+        # debug only
+        print("Listening for connections...")
+
+        while True: # always listening for new clients
+            new_client_connection() # establish new connection; note that this is broken
+
+
+# server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# host = socket.gethostname()
+# port = 12342
+
+# server_socket.bind((host, port))
+# server_socket.listen(NUMBER_OF_CONNECTIONS)
+
